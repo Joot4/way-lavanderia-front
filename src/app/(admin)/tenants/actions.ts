@@ -108,6 +108,75 @@ export async function upsertSubscriptionAction(id: string, formData: FormData) {
   revalidatePath("/tenants");
 }
 
+export async function updateConfigAction(
+  id: string,
+  current: {
+    openingHours?: unknown;
+    humanSupportHours?: unknown;
+  },
+  formData: FormData,
+) {
+  const ownerWhatsapp = String(formData.get("ownerWhatsapp") ?? "").trim();
+  if (!ownerWhatsapp) {
+    throw new Error("WhatsApp do dono é obrigatório");
+  }
+  const payload: Record<string, unknown> = {
+    ownerWhatsapp,
+    humanAttendantPhone: trim(formData.get("humanAttendantPhone")) ?? null,
+    address: trim(formData.get("address")) ?? null,
+    aboutText: trim(formData.get("aboutText")) ?? null,
+    openingHours: current.openingHours ?? null,
+    humanSupportHours: current.humanSupportHours ?? null,
+  };
+
+  await putTenant(
+    `/admin/tenants/${encodeURIComponent(id)}/config`,
+    payload,
+  );
+  revalidatePath(`/tenants/${id}`);
+}
+
+export async function replacePricesAction(id: string, formData: FormData) {
+  const raw = String(formData.get("itemsJson") ?? "[]");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Payload de preços inválido");
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error("Payload de preços inválido");
+  }
+
+  const items = parsed.map((raw, idx) => {
+    const item = raw as Record<string, unknown>;
+    const name = String(item.name ?? "").trim();
+    const priceCents = Number(item.priceCents ?? 0);
+    if (!name) throw new Error(`Item ${idx + 1}: nome é obrigatório`);
+    if (!Number.isInteger(priceCents) || priceCents <= 0) {
+      throw new Error(`Item ${idx + 1}: preço inválido`);
+    }
+    const description =
+      typeof item.description === "string" && item.description.trim()
+        ? item.description.trim()
+        : null;
+    const unit =
+      typeof item.unit === "string" && item.unit.trim()
+        ? item.unit.trim()
+        : null;
+    return {
+      name,
+      priceCents,
+      description,
+      unit,
+      active: item.active !== false,
+    };
+  });
+
+  await putTenant(`/admin/tenants/${encodeURIComponent(id)}/prices`, { items });
+  revalidatePath(`/tenants/${id}`);
+}
+
 export async function recordPaymentAction(id: string, formData: FormData) {
   const method = (trim(formData.get("method")) ??
     "MANUAL") as SubscriptionPaymentMethod;

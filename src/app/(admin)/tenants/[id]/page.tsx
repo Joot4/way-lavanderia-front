@@ -23,6 +23,7 @@ import { BackendError } from "@/lib/backend";
 import {
   deleteTenantAction,
   recordPaymentAction,
+  updateConfigAction,
   updateTenantStatusAction,
   upsertSubscriptionAction,
 } from "../actions";
@@ -31,6 +32,7 @@ import {
   deleteInstanceAction,
   logoutInstanceAction,
 } from "./instance-actions";
+import { PricesEditor, type PriceRow } from "./prices-editor";
 
 export default async function TenantDetailPage({
   params,
@@ -396,10 +398,15 @@ function ConfigSection({ t }: { t: TenantDetail }) {
       </section>
     );
   }
+  const aboutText = extractAboutText(t.config.promptCustomization);
+  const updateConfig = updateConfigAction.bind(null, t.id, {
+    openingHours: t.config.openingHours,
+    humanSupportHours: t.config.humanSupportHours,
+  });
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-4 text-sm font-medium text-zinc-500">Configuração</h2>
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm md:grid-cols-2">
+      <dl className="mb-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm md:grid-cols-2">
         <Field label="WhatsApp do dono" value={t.config.ownerWhatsapp} />
         <Field
           label="Atendente humano"
@@ -417,17 +424,72 @@ function ConfigSection({ t }: { t: TenantDetail }) {
           multiline
         />
         <Field
-          label="Customização do prompt"
-          value={formatJson(t.config.promptCustomization)}
+          label="Sobre a lavanderia (contexto da IA)"
+          value={aboutText || "—"}
           multiline
           wide
         />
       </dl>
+
+      <details className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950/40">
+        <summary className="cursor-pointer font-medium text-zinc-700 dark:text-zinc-300">
+          Editar configuração
+        </summary>
+        <form action={updateConfig} className="mt-3 space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <LabeledInput
+              label="WhatsApp do dono"
+              name="ownerWhatsapp"
+              defaultValue={t.config.ownerWhatsapp}
+              required
+              placeholder="5511999998888"
+            />
+            <LabeledInput
+              label="WhatsApp do atendente (opcional)"
+              name="humanAttendantPhone"
+              defaultValue={t.config.humanAttendantPhone ?? ""}
+              placeholder="5511988887777"
+            />
+          </div>
+          <LabeledInput
+            label="Endereço"
+            name="address"
+            defaultValue={t.config.address ?? ""}
+            placeholder="Rua X, 123 – Bairro"
+          />
+          <LabeledTextarea
+            label="Sobre a lavanderia (contexto injetado no prompt da IA)"
+            name="aboutText"
+            rows={5}
+            defaultValue={aboutText}
+            placeholder="Horário informal, regras, peculiaridades, o que vocês não fazem, etc."
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            Salvar configuração
+          </button>
+        </form>
+      </details>
     </section>
   );
 }
 
+function extractAboutText(raw: unknown): string {
+  if (!raw || typeof raw !== "object") return "";
+  const v = (raw as { aboutText?: unknown }).aboutText;
+  return typeof v === "string" ? v : "";
+}
+
 function PricesSection({ t }: { t: TenantDetail }) {
+  const initial: PriceRow[] = t.priceItems.map((p) => ({
+    name: p.name,
+    description: p.description ?? "",
+    priceCents: p.priceCents,
+    unit: p.unit ?? "",
+    active: p.active,
+  }));
   return (
     <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <header className="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
@@ -435,7 +497,7 @@ function PricesSection({ t }: { t: TenantDetail }) {
         <span className="text-xs text-zinc-500">{t.priceItems.length} itens</span>
       </header>
       {t.priceItems.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-zinc-500">
+        <p className="px-5 py-6 text-center text-sm text-zinc-500">
           Nenhum item cadastrado.
         </p>
       ) : (
@@ -477,6 +539,15 @@ function PricesSection({ t }: { t: TenantDetail }) {
           </tbody>
         </table>
       )}
+
+      <details className="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          {t.priceItems.length === 0 ? "Adicionar preços" : "Editar tabela"}
+        </summary>
+        <div className="mt-3">
+          <PricesEditor tenantId={t.id} initial={initial} />
+        </div>
+      </details>
     </section>
   );
 }
