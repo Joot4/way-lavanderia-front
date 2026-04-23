@@ -31,6 +31,9 @@ function trim(value: FormDataEntryValue | null): string | undefined {
 }
 
 export async function createTenantAction(formData: FormData) {
+  const priceRaw = trim(formData.get("monthlyPrice"));
+  const enableSubscription = Boolean(formData.get("enableSubscription")) && !!priceRaw;
+
   const payload = {
     name: String(formData.get("name") ?? "").trim(),
     instanceName: String(formData.get("instanceName") ?? "").trim(),
@@ -43,9 +46,9 @@ export async function createTenantAction(formData: FormData) {
       aboutText: trim(formData.get("aboutText")) ?? null,
     },
     priceItems: [] as unknown[],
-    subscription: formData.get("enableSubscription")
+    subscription: enableSubscription
       ? {
-          monthlyPriceCents: parseCents(formData.get("monthlyPrice")),
+          monthlyPriceCents: parseCents(priceRaw!),
           dueDay: Number(formData.get("dueDay") ?? 1),
           trialDays: formData.get("trialDays")
             ? Number(formData.get("trialDays"))
