@@ -116,6 +116,13 @@ export async function postTenant(path: string, body: unknown): Promise<void> {
   if (!res.ok) throw await backendErrorFrom(res, path);
 }
 
+export function createTenant(body: unknown): Promise<TenantDetail> {
+  return backendJson<TenantDetail>("/admin/tenants", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function patchTenant(path: string, body: unknown): Promise<void> {
   const res = await backendFetch(path, {
     method: "PATCH",

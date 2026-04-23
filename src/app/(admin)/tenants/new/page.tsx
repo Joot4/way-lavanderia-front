@@ -18,8 +18,8 @@ export default function NewTenantPage() {
           Nova lavanderia
         </h1>
         <p className="text-sm text-zinc-500">
-          Cadastre um cliente novo. A instância da Evolution (WhatsApp) é criada
-          em seguida, na página de detalhes.
+          Cadastre um cliente novo. A instância do WhatsApp é criada
+          automaticamente — ao salvar, você já vê o QR pra conectar.
         </p>
       </header>
 

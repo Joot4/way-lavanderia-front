@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
+  createTenant,
   deleteTenant as deleteTenantCall,
   patchTenant,
   postTenant,
@@ -11,6 +12,7 @@ import {
   type TenantStatus,
   type SubscriptionStatus,
 } from "@/lib/tenants";
+import { BackendError } from "@/lib/backend";
 
 function parseCents(value: FormDataEntryValue | null): number {
   if (value == null) return 0;
@@ -56,9 +58,21 @@ export async function createTenantAction(formData: FormData) {
     throw new Error("Nome, instanceName e ownerWhatsapp são obrigatórios");
   }
 
-  await postTenant("/admin/tenants", payload);
+  const tenant = await createTenant(payload);
+
+  try {
+    await postTenant("/admin/instances", { instanceName: payload.instanceName });
+  } catch (err) {
+    // Se já existe na Evolution (ex: retry após falha), tudo bem — a
+    // página de detalhes vai mostrar o QR. Outros erros também não devem
+    // bloquear: o tenant foi criado, usuário pode retryar ali.
+    if (!(err instanceof BackendError) || err.status !== 409) {
+      console.warn(`Falha ao provisionar instância: ${(err as Error).message}`);
+    }
+  }
+
   revalidatePath("/tenants");
-  redirect("/tenants");
+  redirect(`/tenants/${tenant.id}`);
 }
 
 export async function updateTenantStatusAction(
