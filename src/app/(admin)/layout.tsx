@@ -4,6 +4,7 @@ import { auth, signOut } from "@/lib/auth";
 const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/tenants", label: "Lavanderias" },
+  { href: "/usage", label: "Uso & custo" },
 ];
 
 export default async function AdminLayout({
