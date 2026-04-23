@@ -8,14 +8,21 @@ export default function AdminError({
   reset: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-      <h2 className="text-lg font-semibold">Algo deu errado</h2>
-      <p className="max-w-sm text-sm text-zinc-500">
+    <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-4 py-24 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <h2 className="text-lg font-semibold text-slate-900">Algo deu errado</h2>
+      <p className="text-sm text-slate-500">
         {error.message || "Erro inesperado ao carregar a página."}
       </p>
       <button
         onClick={reset}
-        className="rounded-md border border-zinc-200 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+        className="rounded-md bg-sky-600 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
       >
         Tentar novamente
       </button>

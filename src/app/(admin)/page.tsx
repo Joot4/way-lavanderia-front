@@ -59,7 +59,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
           <h2 className="text-sm font-medium">Ação necessária</h2>
           <span className="text-xs text-zinc-500">
@@ -71,7 +71,8 @@ export default async function DashboardPage() {
             Tudo em dia. Nenhum tenant precisa de atenção agora.
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-950/40">
               <tr>
                 <th className="px-4 py-2 font-medium">Lavanderia</th>
@@ -86,6 +87,7 @@ export default async function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </div>

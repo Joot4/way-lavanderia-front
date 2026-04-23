@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createTenantAction } from "../actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export default function NewTenantPage() {
   return (
@@ -118,19 +119,16 @@ export default function NewTenantPage() {
           </div>
         </Section>
 
-        <div className="flex items-center justify-end gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+        <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
           <Link
             href="/tenants"
-            className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+            className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             Cancelar
           </Link>
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
+          <SubmitButton pendingLabel="Criando lavanderia…">
             Criar lavanderia
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </div>

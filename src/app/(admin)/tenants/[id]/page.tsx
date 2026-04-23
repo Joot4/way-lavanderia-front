@@ -33,6 +33,7 @@ import {
   logoutInstanceAction,
 } from "./instance-actions";
 import { PricesEditor, type PriceRow } from "./prices-editor";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function TenantDetailPage({
   params,
@@ -152,32 +153,23 @@ function TenantStatusActions({
     <div className="flex flex-wrap items-center gap-2">
       {status !== "ACTIVE" && (
         <form action={setStatus.bind(null, "ACTIVE")}>
-          <button
-            type="submit"
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-500"
-          >
+          <SubmitButton variant="success" size="sm" pendingLabel="Atualizando…">
             Marcar como ativa
-          </button>
+          </SubmitButton>
         </form>
       )}
       {status !== "SUSPENDED" && (
         <form action={setStatus.bind(null, "SUSPENDED")}>
-          <button
-            type="submit"
-            className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-500"
-          >
+          <SubmitButton variant="warn" size="sm" pendingLabel="Atualizando…">
             Suspender
-          </button>
+          </SubmitButton>
         </form>
       )}
       {status === "SUSPENDED" && (
         <form action={setStatus.bind(null, "TRIAL")}>
-          <button
-            type="submit"
-            className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-          >
+          <SubmitButton variant="ghost" size="sm" pendingLabel="Atualizando…">
             Voltar pra trial
-          </button>
+          </SubmitButton>
         </form>
       )}
     </div>
@@ -296,12 +288,9 @@ function SubscriptionSection({
             rows={2}
             defaultValue={subscription?.notes ?? ""}
           />
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
+          <SubmitButton size="sm" pendingLabel="Salvando…">
             Salvar
-          </button>
+          </SubmitButton>
         </form>
       </details>
 
@@ -347,12 +336,9 @@ function SubscriptionSection({
               name="note"
               placeholder="Ex: pago via pix, comprovante enviado por WhatsApp"
             />
-            <button
-              type="submit"
-              className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-500"
-            >
+            <SubmitButton variant="success" size="sm" pendingLabel="Registrando…">
               Registrar
-            </button>
+            </SubmitButton>
           </form>
         </details>
       )}
@@ -464,12 +450,9 @@ function ConfigSection({ t }: { t: TenantDetail }) {
             defaultValue={aboutText}
             placeholder="Horário informal, regras, peculiaridades, o que vocês não fazem, etc."
           />
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
+          <SubmitButton size="sm" pendingLabel="Salvando…">
             Salvar configuração
-          </button>
+          </SubmitButton>
         </form>
       </details>
     </section>
@@ -659,12 +642,9 @@ function InstanceSection({
         <form
           action={createInstanceAction.bind(null, tenantId, instanceName)}
         >
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
+          <SubmitButton size="sm" pendingLabel="Criando instância…">
             Criar instância
-          </button>
+          </SubmitButton>
         </form>
       </section>
     );
@@ -745,23 +725,17 @@ function InstanceSection({
           <form
             action={logoutInstanceAction.bind(null, tenantId, instance.name)}
           >
-            <button
-              type="submit"
-              className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:bg-zinc-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
-            >
+            <SubmitButton variant="warn" size="sm" pendingLabel="Desconectando…">
               Desconectar WhatsApp
-            </button>
+            </SubmitButton>
           </form>
         )}
         <form
           action={deleteInstanceAction.bind(null, tenantId, instance.name)}
         >
-          <button
-            type="submit"
-            className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-zinc-900 dark:text-red-300 dark:hover:bg-red-950/40"
-          >
+          <SubmitButton variant="danger" size="sm" pendingLabel="Deletando…">
             Deletar instância
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </section>
@@ -779,12 +753,9 @@ function DangerZone({ id }: { id: string }) {
         reclamações e pagamentos. Ação irreversível.
       </p>
       <form action={deleteTenantAction.bind(null, id)}>
-        <button
-          type="submit"
-          className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
-        >
+        <SubmitButton variant="danger" size="sm" pendingLabel="Excluindo…">
           Excluir lavanderia
-        </button>
+        </SubmitButton>
       </form>
     </section>
   );

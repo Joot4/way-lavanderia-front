@@ -10,15 +10,24 @@ export default async function LoginPage({
   const next = params.next ?? "/";
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-zinc-950 px-4 text-zinc-100">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-2xl">
+    <div className="flex min-h-dvh items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-sky-100/40">
         <div className="mb-6 text-center">
-          <h1 className="text-xl font-semibold tracking-tight">Lavanderia AI</h1>
-          <p className="mt-1 text-sm text-zinc-400">Painel administrativo</p>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-600">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3 7c0-1.1.9-2 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
+              <circle cx="12" cy="13" r="4" />
+              <path d="M7 7h.01M11 7h.01" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+            Lavanderia AI
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">Painel administrativo</p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error === "AccessDenied"
               ? "Este email não está autorizado."
               : "Não foi possível entrar. Tente de novo."}
@@ -33,14 +42,14 @@ export default async function LoginPage({
         >
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             <GoogleIcon />
             Entrar com Google
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
+        <p className="mt-6 text-center text-xs text-slate-400">
           Acesso restrito a administradores.
         </p>
       </div>
