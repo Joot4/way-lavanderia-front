@@ -153,6 +153,7 @@ export async function updateConfigAction(
   current: {
     openingHours?: unknown;
     humanSupportHours?: unknown;
+    machines?: unknown;
   },
   formData: FormData,
 ) {
@@ -168,6 +169,7 @@ export async function updateConfigAction(
     aboutText: trim(formData.get("aboutText")) ?? null,
     openingHours: current.openingHours ?? null,
     humanSupportHours: current.humanSupportHours ?? null,
+    machines: current.machines ?? null,
   };
 
   try {
@@ -180,6 +182,83 @@ export async function updateConfigAction(
     throw err;
   }
   await setFlash("success", "Configuração salva.");
+  revalidatePath(`/tenants/${id}`);
+}
+
+export async function replaceMachinesAction(
+  id: string,
+  current: {
+    ownerWhatsapp: string;
+    humanAttendantPhone: string | null;
+    address: string | null;
+    openingHours?: unknown;
+    humanSupportHours?: unknown;
+    aboutText: string | null;
+  },
+  formData: FormData,
+) {
+  const raw = String(formData.get("machinesJson") ?? "[]");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Payload de máquinas inválido");
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error("Payload de máquinas inválido");
+  }
+
+  const machines = parsed.map((rawItem, idx) => {
+    const item = rawItem as Record<string, unknown>;
+    const name = String(item.name ?? "").trim();
+    if (!name) throw new Error(`Máquina ${idx + 1}: nome é obrigatório`);
+    const model =
+      typeof item.model === "string" && item.model.trim()
+        ? item.model.trim()
+        : null;
+    const notes =
+      typeof item.notes === "string" && item.notes.trim()
+        ? item.notes.trim()
+        : null;
+    const errorsRaw = Array.isArray(item.errors) ? item.errors : [];
+    const errors = errorsRaw
+      .map((e) => {
+        const er = e as Record<string, unknown>;
+        const code = String(er.code ?? "").trim();
+        const meaning = String(er.meaning ?? "").trim();
+        if (!code || !meaning) return null;
+        return { code, meaning };
+      })
+      .filter((e): e is { code: string; meaning: string } => e !== null);
+    return { name, model, notes, errors };
+  });
+
+  const payload: Record<string, unknown> = {
+    ownerWhatsapp: current.ownerWhatsapp,
+    humanAttendantPhone: current.humanAttendantPhone,
+    address: current.address,
+    aboutText: current.aboutText,
+    openingHours: current.openingHours ?? null,
+    humanSupportHours: current.humanSupportHours ?? null,
+    machines,
+  };
+
+  try {
+    await putTenant(
+      `/admin/tenants/${encodeURIComponent(id)}/config`,
+      payload,
+    );
+  } catch (err) {
+    await setFlash(
+      "error",
+      `Falha ao salvar máquinas: ${backendErrorMessage(err)}`,
+    );
+    throw err;
+  }
+  await setFlash(
+    "success",
+    `Máquinas salvas (${machines.length} ${machines.length === 1 ? "máquina" : "máquinas"}).`,
+  );
   revalidatePath(`/tenants/${id}`);
 }
 

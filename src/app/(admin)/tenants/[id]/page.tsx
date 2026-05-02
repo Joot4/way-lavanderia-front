@@ -33,6 +33,7 @@ import {
   logoutInstanceAction,
 } from "./instance-actions";
 import { PricesEditor, type PriceRow } from "./prices-editor";
+import { MachinesEditor, type MachineRow } from "./machines-editor";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function TenantDetailPage({
@@ -133,6 +134,7 @@ export default async function TenantDetailPage({
         error={instanceError}
       />
       <ConfigSection t={t} />
+      <MachinesSection t={t} />
       <PricesSection t={t} />
       <UsersSection t={t} />
       {t.integrations.length > 0 && <IntegrationsSection t={t} />}
@@ -388,6 +390,7 @@ function ConfigSection({ t }: { t: TenantDetail }) {
   const updateConfig = updateConfigAction.bind(null, t.id, {
     openingHours: t.config.openingHours,
     humanSupportHours: t.config.humanSupportHours,
+    machines: t.config.machines,
   });
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -529,6 +532,127 @@ function PricesSection({ t }: { t: TenantDetail }) {
         </summary>
         <div className="mt-3">
           <PricesEditor tenantId={t.id} initial={initial} />
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function parseMachines(raw: unknown): MachineRow[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const m = item as {
+        name?: unknown;
+        model?: unknown;
+        notes?: unknown;
+        errors?: unknown;
+      };
+      const name = typeof m.name === "string" ? m.name : "";
+      if (!name.trim()) return null;
+      const model = typeof m.model === "string" ? m.model : "";
+      const notes = typeof m.notes === "string" ? m.notes : "";
+      const errorsRaw = Array.isArray(m.errors) ? m.errors : [];
+      const errors = errorsRaw
+        .map((e) => {
+          if (!e || typeof e !== "object") return null;
+          const er = e as { code?: unknown; meaning?: unknown };
+          const code = typeof er.code === "string" ? er.code : "";
+          const meaning = typeof er.meaning === "string" ? er.meaning : "";
+          if (!code.trim() || !meaning.trim()) return null;
+          return { code, meaning };
+        })
+        .filter((e): e is { code: string; meaning: string } => e !== null);
+      return { name, model, notes, errors };
+    })
+    .filter((m): m is MachineRow => m !== null);
+}
+
+function MachinesSection({ t }: { t: TenantDetail }) {
+  if (!t.config) return null;
+  const machines = parseMachines(t.config.machines);
+  const aboutText = extractAboutText(t.config.promptCustomization);
+  const totalErrors = machines.reduce((sum, m) => sum + m.errors.length, 0);
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <header className="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <div>
+          <h2 className="text-sm font-medium text-zinc-500">
+            Máquinas e códigos de erro
+          </h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            A IA usa essa lista pra explicar o erro pro cliente quando ele
+            citar o código.
+          </p>
+        </div>
+        <span className="text-xs text-zinc-500">
+          {machines.length} {machines.length === 1 ? "máquina" : "máquinas"} ·{" "}
+          {totalErrors} {totalErrors === 1 ? "erro" : "erros"}
+        </span>
+      </header>
+
+      {machines.length === 0 ? (
+        <p className="px-5 py-6 text-center text-sm text-zinc-500">
+          Nenhuma máquina cadastrada.
+        </p>
+      ) : (
+        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          {machines.map((m, idx) => (
+            <li key={idx} className="px-5 py-3 text-sm">
+              <div className="flex items-baseline justify-between gap-3">
+                <div>
+                  <span className="font-medium">{m.name}</span>
+                  {m.model && (
+                    <span className="ml-2 text-xs text-zinc-500">
+                      ({m.model})
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-zinc-500">
+                  {m.errors.length}{" "}
+                  {m.errors.length === 1 ? "código" : "códigos"}
+                </span>
+              </div>
+              {m.notes && (
+                <div className="mt-0.5 text-xs text-zinc-500">{m.notes}</div>
+              )}
+              {m.errors.length > 0 && (
+                <ul className="mt-2 space-y-0.5">
+                  {m.errors.map((e, i) => (
+                    <li key={i} className="text-xs">
+                      <span className="font-mono font-medium text-zinc-700 dark:text-zinc-300">
+                        {e.code}
+                      </span>
+                      <span className="ml-2 text-zinc-600 dark:text-zinc-400">
+                        {e.meaning}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <details className="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          {machines.length === 0 ? "Cadastrar máquinas" : "Editar máquinas"}
+        </summary>
+        <div className="mt-3">
+          <MachinesEditor
+            tenantId={t.id}
+            initial={machines}
+            current={{
+              ownerWhatsapp: t.config.ownerWhatsapp,
+              humanAttendantPhone: t.config.humanAttendantPhone,
+              address: t.config.address,
+              openingHours: t.config.openingHours,
+              humanSupportHours: t.config.humanSupportHours,
+              aboutText: aboutText || null,
+            }}
+          />
         </div>
       </details>
     </section>

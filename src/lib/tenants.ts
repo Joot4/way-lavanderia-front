@@ -52,6 +52,7 @@ export type TenantDetail = {
     openingHours: unknown;
     humanSupportHours: unknown;
     promptCustomization: unknown;
+    machines: unknown;
   } | null;
   subscription: SubscriptionSummary | null;
   priceItems: {
