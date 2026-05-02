@@ -34,7 +34,8 @@ import {
 } from "./instance-actions";
 import { PricesEditor, type PriceRow } from "./prices-editor";
 import { MachinesEditor, type MachineRow } from "./machines-editor";
-import { HoursEditor, parseWeeklyHours } from "./hours-editor";
+import { HoursEditor } from "./hours-editor";
+import { parseWeeklyHours } from "./hours-utils";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function TenantDetailPage({
