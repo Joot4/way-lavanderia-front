@@ -185,6 +185,56 @@ export async function updateConfigAction(
   revalidatePath(`/tenants/${id}`);
 }
 
+export async function updateHoursAction(
+  id: string,
+  current: {
+    ownerWhatsapp: string;
+    humanAttendantPhone: string | null;
+    address: string | null;
+    aboutText: string | null;
+    machines: unknown;
+  },
+  formData: FormData,
+) {
+  const opening = parseHoursJson(formData.get("openingHoursJson"));
+  const humanSupport = parseHoursJson(formData.get("humanSupportHoursJson"));
+
+  const payload: Record<string, unknown> = {
+    ownerWhatsapp: current.ownerWhatsapp,
+    humanAttendantPhone: current.humanAttendantPhone,
+    address: current.address,
+    aboutText: current.aboutText,
+    openingHours: opening,
+    humanSupportHours: humanSupport,
+    machines: current.machines ?? null,
+  };
+
+  try {
+    await putTenant(
+      `/admin/tenants/${encodeURIComponent(id)}/config`,
+      payload,
+    );
+  } catch (err) {
+    await setFlash(
+      "error",
+      `Falha ao salvar horários: ${backendErrorMessage(err)}`,
+    );
+    throw err;
+  }
+  await setFlash("success", "Horários salvos.");
+  revalidatePath(`/tenants/${id}`);
+}
+
+function parseHoursJson(raw: FormDataEntryValue | null): unknown {
+  if (raw == null) return null;
+  try {
+    const parsed = JSON.parse(String(raw));
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function replaceMachinesAction(
   id: string,
   current: {

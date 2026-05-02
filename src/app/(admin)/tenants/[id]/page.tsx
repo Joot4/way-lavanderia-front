@@ -34,6 +34,7 @@ import {
 } from "./instance-actions";
 import { PricesEditor, type PriceRow } from "./prices-editor";
 import { MachinesEditor, type MachineRow } from "./machines-editor";
+import { HoursEditor, parseWeeklyHours } from "./hours-editor";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function TenantDetailPage({
@@ -134,6 +135,7 @@ export default async function TenantDetailPage({
         error={instanceError}
       />
       <ConfigSection t={t} />
+      <HoursSection t={t} />
       <MachinesSection t={t} />
       <PricesSection t={t} />
       <UsersSection t={t} />
@@ -403,16 +405,6 @@ function ConfigSection({ t }: { t: TenantDetail }) {
         />
         <Field label="Endereço" value={t.config.address ?? "—"} />
         <Field
-          label="Horário de funcionamento"
-          value={formatJson(t.config.openingHours)}
-          multiline
-        />
-        <Field
-          label="Horário de atendimento humano"
-          value={formatJson(t.config.humanSupportHours)}
-          multiline
-        />
-        <Field
           label="Sobre a lavanderia (contexto da IA)"
           value={aboutText || "—"}
           multiline
@@ -535,6 +527,133 @@ function PricesSection({ t }: { t: TenantDetail }) {
         </div>
       </details>
     </section>
+  );
+}
+
+function summarizeHours(raw: unknown): { open: number; lines: string[] } {
+  const dayLabels: Record<string, string> = {
+    monday: "Seg",
+    tuesday: "Ter",
+    wednesday: "Qua",
+    thursday: "Qui",
+    friday: "Sex",
+    saturday: "Sáb",
+    sunday: "Dom",
+  };
+  const lines: string[] = [];
+  let openCount = 0;
+  if (!raw || typeof raw !== "object") {
+    for (const label of Object.values(dayLabels)) {
+      lines.push(`${label}: fechado`);
+    }
+    return { open: 0, lines };
+  }
+  const record = raw as Record<string, unknown>;
+  for (const [key, label] of Object.entries(dayLabels)) {
+    const slot = record[key] as { start?: unknown; end?: unknown } | null | undefined;
+    if (!slot || typeof slot !== "object") {
+      lines.push(`${label}: fechado`);
+      continue;
+    }
+    const start = typeof slot.start === "string" ? slot.start : "";
+    const end = typeof slot.end === "string" ? slot.end : "";
+    if (!start || !end) {
+      lines.push(`${label}: fechado`);
+      continue;
+    }
+    openCount += 1;
+    if (start === "00:00" && (end === "23:59" || end === "24:00")) {
+      lines.push(`${label}: 24h`);
+    } else {
+      lines.push(`${label}: ${start}–${end}`);
+    }
+  }
+  return { open: openCount, lines };
+}
+
+function HoursSection({ t }: { t: TenantDetail }) {
+  if (!t.config) return null;
+  const opening = summarizeHours(t.config.openingHours);
+  const humanSupport = summarizeHours(t.config.humanSupportHours);
+  const aboutText = extractAboutText(t.config.promptCustomization);
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <header className="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <div>
+          <h2 className="text-sm font-medium text-zinc-500">
+            Horários
+          </h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            A IA usa esses horários pra responder quando o cliente perguntar
+            se está aberto ou se tem atendente.
+          </p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 gap-5 px-5 py-4 md:grid-cols-2">
+        <HoursPreview
+          title="Funcionamento"
+          subtitle="quando a loja está aberta"
+          summary={opening}
+        />
+        <HoursPreview
+          title="Atendimento humano presencial"
+          subtitle="quando tem alguém na loja"
+          summary={humanSupport}
+        />
+      </div>
+
+      <details className="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Editar horários
+        </summary>
+        <div className="mt-3">
+          <HoursEditor
+            tenantId={t.id}
+            initialOpening={parseWeeklyHours(t.config.openingHours)}
+            initialHumanSupport={parseWeeklyHours(t.config.humanSupportHours)}
+            current={{
+              ownerWhatsapp: t.config.ownerWhatsapp,
+              humanAttendantPhone: t.config.humanAttendantPhone,
+              address: t.config.address,
+              aboutText: aboutText || null,
+              machines: t.config.machines,
+            }}
+          />
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function HoursPreview({
+  title,
+  subtitle,
+  summary,
+}: {
+  title: string;
+  subtitle: string;
+  summary: { open: number; lines: string[] };
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {title}
+        </h3>
+        <span className="text-xs text-zinc-500">
+          {summary.open} {summary.open === 1 ? "dia aberto" : "dias abertos"}
+        </span>
+      </div>
+      <p className="mt-0.5 text-[11px] text-zinc-400">{subtitle}</p>
+      <ul className="mt-2 space-y-0.5 text-xs">
+        {summary.lines.map((line, i) => (
+          <li key={i} className="font-mono text-zinc-700 dark:text-zinc-300">
+            {line}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -978,12 +1097,3 @@ function LabeledTextarea({
   );
 }
 
-function formatJson(value: unknown): string {
-  if (value == null) return "—";
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
